@@ -50,7 +50,7 @@ public class Main {
         System.out.println(taskManager.getAllTasks());
 
         delete(taskManager);
-        taskManager.getAllTasks();
+        System.out.println(taskManager.getAllTasks());
     }
 
     private static void update(Task task1, TaskManager<Task> manager) {
@@ -63,6 +63,7 @@ public class Main {
         manager.removeById(3);
         manager.removeAllTasks();
         System.out.println("All tasks removed");
+        manager.add(new Task("", ""));
     }
 
     private static void create(TaskManager<Task> manager, Task task1, Task task2, Epic epic1, Epic epic2, Subtask subtask1, Subtask subtask2, Subtask subtask3) {

@@ -75,12 +75,15 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
     @Override
     public List<Subtask> getSubTasks(Epic epic) {
         List<Subtask> subtasks = new ArrayList<>();
+        if (epic.getSubtasks().isEmpty()) {
+            System.out.println("This epic does not have subtasks");
+        }
         if (getAllEpics().contains(epic)) {
             for (Map.Entry<Integer, Subtask> set : epic.getSubtasks().entrySet()) {
                 subtasks.add(set.getValue());
             }
         } else {
-            throw new RuntimeException("This epic does not have subtasks");
+            throw new TaskNotFoundException("No tasks found");
         }
         return subtasks;
     }
