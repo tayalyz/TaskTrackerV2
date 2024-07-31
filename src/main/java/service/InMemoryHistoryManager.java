@@ -60,6 +60,7 @@ public class InMemoryHistoryManager<T extends Task> implements HistoryManager<T>
         size++;
     }
 
+    @Override
     public void remove(int id) {
         if (nodes.containsKey(id)) {
             removeNode(nodes.get(id));

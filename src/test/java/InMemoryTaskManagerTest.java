@@ -1,24 +1,26 @@
 import exception.TaskNotFoundException;
 import model.Epic;
+import model.Status;
 import model.Subtask;
 import model.Task;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import service.InMemoryTaskManager;
 import service.TaskManager;
-import utils.Managers;
 
 import java.util.List;
-import static org.junit.Assert.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class InMemoryTaskManagerTest {
     private TaskManager<Task> inMemoryTaskManager;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        inMemoryTaskManager = Managers.getDefault();
-
+        inMemoryTaskManager = new InMemoryTaskManager<>();
+        InMemoryTaskManager.setTaskId(new AtomicInteger(0));
         Task task1 = new Task("title1", "desc1");
         Task task2 = new Task("title2", "desc2");
         Task task3 = new Task("title3", "desc3");
@@ -26,11 +28,6 @@ public class InMemoryTaskManagerTest {
         inMemoryTaskManager.add(task1);
         inMemoryTaskManager.add(task2);
         inMemoryTaskManager.add(task3);
-    }
-
-    @After
-    public void clean() {
-        inMemoryTaskManager.removeAllTasks();
     }
 
     @Test
@@ -45,14 +42,13 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void testGetById() {
-        inMemoryTaskManager.getAllTasks();
-        Task task = inMemoryTaskManager.getTaskById(33);
-        assertEquals(33, task.getId());
+        Task task = inMemoryTaskManager.getTaskById(3);
+        assertEquals(3, task.getId());
     }
 
-    @Test(expected = TaskNotFoundException.class)
+    @Test
     public void testGetByIdFailure() {
-        inMemoryTaskManager.getTaskById(170000);
+        assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.getTaskById(17000));
     }
 
     @Test
@@ -60,13 +56,13 @@ public class InMemoryTaskManagerTest {
         assertEquals(3, inMemoryTaskManager.getAllTasks().size());
     }
 
-    @Test(expected = TaskNotFoundException.class)
+    @Test
     public void testGetAllTasksFailure() {
         inMemoryTaskManager.removeAllTasks();
-        inMemoryTaskManager.getAllTasks();
+        assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.getAllTasks());
     }
 
-    @Test  //(expected = TaskNotFoundException.class)
+    @Test
     public void testRemoveAll() {
         inMemoryTaskManager.removeAllTasks();
         assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.getAllTasks());
@@ -74,20 +70,18 @@ public class InMemoryTaskManagerTest {
 
     @Test
     public void testRemoveById() {
-        inMemoryTaskManager.getAllTasks();
-        inMemoryTaskManager.removeById(47);
+        inMemoryTaskManager.removeById(2);
         assertEquals(2, inMemoryTaskManager.getAllTasks().size());
     }
 
-    @Test(expected = TaskNotFoundException.class)
+    @Test
     public void testRemoveByIdFailure() {
-        inMemoryTaskManager.removeById(170000);
+        assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.removeById(17000));
     }
 
     @Test
     public void testUpdate() {
-        inMemoryTaskManager.getAllTasks();
-        Task task = inMemoryTaskManager.getTaskById(63);
+        Task task = inMemoryTaskManager.getTaskById(3);
         task.setTitle("abs");
         task.setDescription("abs");
         inMemoryTaskManager.update(task);
@@ -95,14 +89,13 @@ public class InMemoryTaskManagerTest {
         assertEquals("abs", task.getDescription());
     }
 
-    @Test(expected = TaskNotFoundException.class)
+    @Test
     public void testUpdateFailure() {
-        inMemoryTaskManager.getAllTasks();
         Task task = new Task("", "");
 
         task.setTitle("abs");
         task.setDescription("abs");
-        inMemoryTaskManager.update(task);
+        assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.update(task));
     }
 
     @Test
@@ -116,9 +109,9 @@ public class InMemoryTaskManagerTest {
         assertEquals(3, inMemoryTaskManager.getAllEpics().size());
     }
 
-    @Test(expected = TaskNotFoundException.class)
+    @Test
     public void testGetAllEpicsFailure() {
-        inMemoryTaskManager.getAllEpics();
+        assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.getAllEpics());
     }
 
     @Test
@@ -171,8 +164,30 @@ public class InMemoryTaskManagerTest {
         assertEquals(4, inMemoryTaskManager.getAllSubtasks().size());
     }
 
-    @Test(expected = TaskNotFoundException.class)
+    @Test
     public void testGetAllSubtasksFailure() {
-        inMemoryTaskManager.getAllSubtasks();
+        assertThrows(TaskNotFoundException.class, () -> inMemoryTaskManager.getAllSubtasks());
+    }
+
+    @Test
+    public void testStatus() {
+        Epic epic1 = new Epic("ep1", "des");
+        inMemoryTaskManager.add(epic1);
+
+        Subtask subtask1 = new Subtask("", "", epic1);
+        Subtask subtask2 = new Subtask("", "", epic1);
+        inMemoryTaskManager.addSubtask(subtask1, epic1);
+        inMemoryTaskManager.addSubtask(subtask2, epic1);
+        assertSame(epic1.getStatus(), Status.NEW);
+
+        subtask1.setStatus(Status.DONE);
+        subtask2.setStatus(Status.DONE);
+        inMemoryTaskManager.update(subtask1);
+        inMemoryTaskManager.update(subtask2);
+        assertSame(epic1.getStatus(), Status.DONE);
+
+        subtask1.setStatus(Status.IN_PROGRESS);
+        inMemoryTaskManager.update(subtask1);
+        assertSame(epic1.getStatus(), Status.IN_PROGRESS);
     }
 }

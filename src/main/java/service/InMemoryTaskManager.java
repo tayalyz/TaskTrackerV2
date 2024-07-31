@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
-    private static final AtomicInteger taskId = new AtomicInteger(0);
+    private static AtomicInteger taskId = new AtomicInteger(0);
     private Map<Integer, T> tasks;
 
     public InMemoryTaskManager() {
@@ -30,6 +30,10 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
                 .orElseThrow(() -> new TaskNotFoundException("Task not found"));
         Managers.getDefaultHistory().add(task); // TODO
         return task;
+    }
+
+    public static void setTaskId(AtomicInteger taskId) {
+        InMemoryTaskManager.taskId = taskId;
     }
 
     @Override
