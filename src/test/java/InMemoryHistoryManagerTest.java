@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test;
 import service.HistoryManager;
 import service.InMemoryTaskManager;
 import service.TaskManager;
+import utils.Identifier;
 import utils.Managers;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,7 +19,9 @@ public class InMemoryHistoryManagerTest {
     public void setUp() {
         inMemoryHistoryManager = Managers.getDefaultHistory();
         inMemoryTaskManager = new InMemoryTaskManager<>();
-        InMemoryTaskManager.setTaskId(new AtomicInteger(0));
+
+        Identifier.INSTANCE.setId(1);
+
         Task task1 = new Task("title1", "desc1");
         Task task2 = new Task("title2", "desc2");
         Task task3 = new Task("title3", "desc3");

@@ -14,51 +14,68 @@ import model.Task;
 import utils.Managers;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
-    private static AtomicInteger taskId = new AtomicInteger(0);
     private Map<Integer, T> tasks;
+    protected final HistoryManager<Task> historyManager;
 
     public InMemoryTaskManager() {
         this.tasks = new HashMap<>();
+        this.historyManager = Managers.getDefaultHistory();
     }
 
     @Override
     public T getTaskById(int id) {
         T task = Optional.ofNullable(tasks.get(id))
                 .orElseThrow(() -> new TaskNotFoundException("Task not found"));
-        Managers.getDefaultHistory().add(task); // TODO
+        historyManager.add(task);
         return task;
-    }
-
-    public static void setTaskId(AtomicInteger taskId) {
-        InMemoryTaskManager.taskId = taskId;
     }
 
     @Override
     public Subtask addSubtask(Subtask subtask, Epic epic) {
-        subtask.setId(taskId.incrementAndGet());
+        tasks.put(subtask.getId(), (T) subtask);
         return epic.addSubtask(subtask);
     }
 
     @Override
     public T add(T task) {
-        task.setId(taskId.incrementAndGet());
         return tasks.put(task.getId(), task);
     }
 
     @Override
     public void removeAllTasks() {
-        tasks.clear();
+        if (!tasks.isEmpty()) {
+            for (T task : tasks.values()) {
+                historyManager.remove(task.getId());
+            }
+            tasks.clear();
+        }
+        System.out.println("Все задачи удалены");
     }
 
     @Override
     public void removeById(int id) {
         if (tasks.containsKey(id)) {
+            T task = getTaskById(id);
+            if (task instanceof Epic && !((Epic)task).getSubtasks().isEmpty()) {
+                List<Integer> subtasksIds = ((Epic) task).getSubtasksIds();
+
+                for (int subtaskId: subtasksIds){
+                    removeById(subtaskId);
+                }
+            } else if (task instanceof Subtask) { // TODO проверить если сабтаск и удалить его у epic
+                List<Epic> list = getAllEpics();
+                for (Epic epic : list) {
+                    if (epic.getSubtasksIds().contains(task.getId())) {
+                        epic.removeSubtaskById(task.getId());
+                    }
+                }
+            }
+            historyManager.remove(id);
             tasks.remove(id);
         } else {
-            throw new TaskNotFoundException("Task does not exist");
+            System.err.println("Task does not exist");
         }
     }
 
@@ -72,8 +89,9 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
             tasks.put(task.getId(), task);
             return Optional.of(task);
         } else {
-            throw new TaskNotFoundException("Task does not exist");
+            System.err.println("Task does not exist");
         }
+        return Optional.empty();
     }
 
     @Override
@@ -87,7 +105,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
                 subtasks.add(set.getValue());
             }
         } else {
-            throw new TaskNotFoundException("No tasks found");
+            System.err.println("No tasks found");
         }
         return subtasks;
     }
@@ -97,8 +115,9 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
         if (!tasks.isEmpty()) {
             return new ArrayList<>(tasks.values());
         } else {
-            throw new TaskNotFoundException("No tasks found");
+            System.err.println("No tasks found");
         }
+        return List.of();
     }
 
     @Override
@@ -113,8 +132,9 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
         if (!epics.isEmpty()) {
             return epics;
         } else {
-            throw new TaskNotFoundException("No epics found");
+            System.err.println("No epics found");
         }
+        return epics;
     }
 
     @Override
@@ -124,7 +144,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
             sub.addAll(getSubTasks(epic));
         }
         if (sub.isEmpty()) {
-            throw new TaskNotFoundException("No subtasks found");
+            System.err.println("No subtasks found");
         }
         return sub;
     }

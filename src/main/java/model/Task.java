@@ -1,5 +1,7 @@
 package model;
 
+import utils.Identifier;
+
 public class Task {
     protected int id;
     protected String title;
@@ -8,6 +10,7 @@ public class Task {
     protected Type type;
 
     public Task(String title, String description) {
+        this.id = Identifier.INSTANCE.generate();
         this.type = Type.TASK;
         this.status = Status.NEW;
         this.title = title;
@@ -15,9 +18,18 @@ public class Task {
     }
 
     public Task(String description, String title, Status status) {
+
         this.description = description;
         this.title = title;
         this.status = status;
+    }
+
+    public Task(int id, String title, String description, Status status, Type type) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.status = status;
+        this.type = type;
     }
 
     public Status getStatus() {
@@ -52,14 +64,18 @@ public class Task {
         this.description = description;
     }
 
+    public Type getType() {
+        return type;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
-                "id=" + id +
+                "type=" + type +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
-                ", type=" + type +
+                ", id=" + id +
                 '}';
     }
 }

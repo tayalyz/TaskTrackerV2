@@ -1,6 +1,8 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static model.Status.*;
@@ -20,6 +22,19 @@ public class Epic extends Task {
 
     public void setSubtasks(HashMap<Integer, Subtask> subtasks) {
         this.subtasks = subtasks;
+    }
+
+    public List<Integer> getSubtasksIds() {
+        List<Integer> list = new ArrayList<>();
+        for (Map.Entry<Integer, Subtask> set : subtasks.entrySet()) {
+            list.add(set.getKey());
+        }
+        // todo list задач с id
+        return list;
+    }
+
+    public void removeSubtaskById(int id) {
+        subtasks.remove(id);
     }
 
     public Subtask addSubtask(Subtask subtask) {
@@ -60,9 +75,9 @@ public class Epic extends Task {
     public String toString() {
         return "Epic{" +
                 "type=" + type +
-                ", status=" + status +
-                ", description='" + description + '\'' +
                 ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
                 ", id=" + id +
                 ", subtasks=" + subtasks +
                 '}';

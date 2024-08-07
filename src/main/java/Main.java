@@ -2,6 +2,7 @@ import model.Epic;
 import model.Status;
 import model.Subtask;
 import model.Task;
+import service.FileBackedTasksManager;
 import service.HistoryManager;
 import service.TaskManager;
 import utils.Managers;
@@ -9,8 +10,10 @@ import utils.Managers;
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager<Task> taskManager = Managers.getDefault();
+        FileBackedTasksManager<Task> taskManager = new FileBackedTasksManager<>("data.csv");
         HistoryManager<Task> historyManager = Managers.getDefaultHistory();
+
+
         Task task1 = new Task("111", "111");
         Task task2 = new Task("222", "222");
         Task task3 = new Task("234", "updated");
@@ -28,6 +31,7 @@ public class Main {
 
         taskManager.add(task3);
         taskManager.add(task4);
+        System.out.println(taskManager.getAllTasks());
 
         get(taskManager, epic1);
         taskManager.getTaskById(1);
@@ -48,9 +52,11 @@ public class Main {
 
         System.out.println("Updated task: " + task1 + "\nUpdated epic: " + epic1);
         System.out.println(taskManager.getAllTasks());
+        System.out.println(taskManager.readFile());
 
-        delete(taskManager);
-        System.out.println(taskManager.getAllTasks());
+//        delete(taskManager);
+        //System.out.println(taskManager.getAllTasks());
+
     }
 
     private static void update(Task task1, TaskManager<Task> manager) {

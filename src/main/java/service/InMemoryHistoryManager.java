@@ -40,7 +40,7 @@ public class InMemoryHistoryManager<T extends Task> implements HistoryManager<T>
     @Override
     public List<T> getHistory() {
         if (getTasks().isEmpty()) {
-            System.out.println("Список пуст");
+            System.out.println("History is empty");
         }
         return getTasks();
     }
@@ -85,6 +85,4 @@ public class InMemoryHistoryManager<T extends Task> implements HistoryManager<T>
 
         size--;
     }
-
-
 }
