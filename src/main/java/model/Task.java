@@ -71,11 +71,11 @@ public class Task {
     @Override
     public String toString() {
         return "Task{" +
-                "type=" + type +
+                "id=" + id +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
-                ", id=" + id +
+                ", type=" + type +
                 '}';
     }
 }
