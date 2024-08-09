@@ -16,6 +16,11 @@ public class Epic extends Task {
         this.type = Type.EPIC;
     }
 
+    public Epic(int id, Type type, String title, String description, Status status) {
+        super(id, type, title, description, status);
+        this.subtasks = new HashMap<>();
+    }
+
     public Map<Integer, Subtask> getSubtasks() {
         return subtasks;
     }

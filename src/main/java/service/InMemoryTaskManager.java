@@ -33,13 +33,12 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
     }
 
     @Override
-    public Subtask addSubtask(Subtask subtask, Epic epic) {
-        tasks.put(subtask.getId(), (T) subtask);
-        return epic.addSubtask(subtask);
-    }
-
-    @Override
     public T add(T task) {
+        if (task instanceof Subtask) {
+            Epic epic = ((Subtask) task).getParent();
+            epic.addSubtask((Subtask) task);
+            epic.updateStatus();
+        }
         return tasks.put(task.getId(), task);
     }
 
@@ -51,7 +50,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
             }
             tasks.clear();
         }
-        System.out.println("Все задачи удалены");
+        System.out.println("All tasks deleted");
     }
 
     @Override
@@ -65,12 +64,8 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
                     removeById(subtaskId);
                 }
             } else if (task instanceof Subtask) { // TODO проверить если сабтаск и удалить его у epic
-                List<Epic> list = getAllEpics();
-                for (Epic epic : list) {
-                    if (epic.getSubtasksIds().contains(task.getId())) {
-                        epic.removeSubtaskById(task.getId());
-                    }
-                }
+                Epic epic = ((Subtask) task).getParent();
+                epic.removeSubtaskById(task.getId());
             }
             historyManager.remove(id);
             tasks.remove(id);
@@ -81,8 +76,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
 
     @Override
     public Optional<T> update(T task) {     // TODO
-        if (tasks.containsKey(task.getId()) || getAllSubtasks().stream()
-                .anyMatch(subtask -> subtask.getId() == task.getId())) {
+        if (tasks.containsKey(task.getId())) {
             if (task instanceof Subtask) {
                 ((Subtask) task).getParent().updateStatus();
             }
@@ -95,22 +89,6 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
     }
 
     @Override
-    public List<Subtask> getSubTasks(Epic epic) {
-        List<Subtask> subtasks = new ArrayList<>();
-        if (epic.getSubtasks().isEmpty()) {
-            System.out.println("This epic does not have subtasks");
-        }
-        if (getAllEpics().contains(epic)) {
-            for (Map.Entry<Integer, Subtask> set : epic.getSubtasks().entrySet()) {
-                subtasks.add(set.getValue());
-            }
-        } else {
-            System.err.println("No tasks found");
-        }
-        return subtasks;
-    }
-
-    @Override
     public List<T> getAllTasks() {
         if (!tasks.isEmpty()) {
             return new ArrayList<>(tasks.values());
@@ -118,34 +96,5 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
             System.err.println("No tasks found");
         }
         return List.of();
-    }
-
-    @Override
-    public List<Epic> getAllEpics() {
-        List<Epic> epics = new ArrayList<>();
-        for (T task : tasks.values()) {
-            if (task instanceof Epic) {
-                epics.add((Epic) task);
-            }
-        }
-
-        if (!epics.isEmpty()) {
-            return epics;
-        } else {
-            System.err.println("No epics found");
-        }
-        return epics;
-    }
-
-    @Override
-    public List<Subtask> getAllSubtasks() {
-        List<Subtask> sub = new ArrayList<>();
-        for (Epic epic : getAllEpics()) {
-            sub.addAll(getSubTasks(epic));
-        }
-        if (sub.isEmpty()) {
-            System.err.println("No subtasks found");
-        }
-        return sub;
     }
 }

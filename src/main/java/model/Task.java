@@ -18,18 +18,17 @@ public class Task {
     }
 
     public Task(String description, String title, Status status) {
-
         this.description = description;
         this.title = title;
         this.status = status;
     }
 
-    public Task(int id, String title, String description, Status status, Type type) {
+    public Task(int id, Type type, String title, String description, Status status) {
         this.id = id;
+        this.type = type;
         this.title = title;
         this.description = description;
         this.status = status;
-        this.type = type;
     }
 
     public Status getStatus() {

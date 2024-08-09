@@ -9,6 +9,11 @@ public class Subtask extends Task {
         this.type = Type.SUBTASK;
     }
 
+    public Subtask(int id, Type type, String title, String description, Status status, Epic parent) {
+        super(id, type, title, description, status);
+        this.parent = parent;
+    }
+
     public Epic getParent() {
         return parent;
     }

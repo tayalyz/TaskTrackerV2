@@ -9,9 +9,4 @@ public enum Identifier {
     public int generate() {
         return identifier++;
     }
-
-    public void setId(int id) {
-        this.identifier = id;
-    }
-
 }

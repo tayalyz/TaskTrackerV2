@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import service.HistoryManager;
 import service.InMemoryTaskManager;
 import service.TaskManager;
-import utils.Identifier;
 import utils.Managers;
 
 import java.util.List;
@@ -20,11 +19,12 @@ public class InMemoryHistoryManagerTest {
         inMemoryHistoryManager = Managers.getDefaultHistory();
         inMemoryTaskManager = new InMemoryTaskManager<>();
 
-        Identifier.INSTANCE.setId(1);
-
         Task task1 = new Task("title1", "desc1");
         Task task2 = new Task("title2", "desc2");
         Task task3 = new Task("title3", "desc3");
+        task1.setId(1);
+        task2.setId(2);
+        task3.setId(3);
 
         inMemoryTaskManager.add(task1);
         inMemoryTaskManager.add(task2);
@@ -36,10 +36,13 @@ public class InMemoryHistoryManagerTest {
         Task task1 = new Task("title4", "desc4");
         Task task2 = new Task("title6", "desc6");
         Task task3 = new Task("title5", "desc5");
+        task1.setId(4);
+        task2.setId(6);
+        task3.setId(5);
+
         inMemoryTaskManager.add(task1);
         inMemoryTaskManager.add(task2);
         inMemoryTaskManager.add(task3);
-
         inMemoryTaskManager.getTaskById(3);
         inMemoryTaskManager.getTaskById(5);
         inMemoryTaskManager.getTaskById(4);
@@ -47,8 +50,8 @@ public class InMemoryHistoryManagerTest {
         List<Task> tasks = inMemoryHistoryManager.getHistory();
 
         assertTrue(tasks.contains(task1));
-        assertTrue(tasks.contains(task2));
-        assertFalse(tasks.contains(task3));
+        assertTrue(tasks.contains(task3));
+        assertFalse(tasks.contains(task2));
         assertEquals( 3, tasks.size());
     }
 

@@ -77,22 +77,19 @@ public class Main {
         manager.add(task2);
 
         manager.add(epic1);
-        manager.addSubtask(subtask1, epic1);
-        manager.addSubtask(subtask2, epic1);
+        manager.add(subtask1);
+        manager.add(subtask2);
 
         manager.add(epic2);
-        manager.addSubtask(subtask3, epic2);
+        manager.add(subtask3);
 
         System.out.println("Created tasks: " + manager.getAllTasks());
     }
 
     private static void get(TaskManager<Task> manager, Epic epic1) {
         //manager.getTaskById(1);
-        System.out.println("Subs of epic1: " + manager.getSubTasks(epic1));
         System.out.println();
         System.out.println("All tasks:" + manager.getAllTasks());
-        System.out.println("All Subs: " + manager.getAllSubtasks());
-        System.out.println("All Epics: " + manager.getAllEpics());
     }
 
     private static void mod() {
