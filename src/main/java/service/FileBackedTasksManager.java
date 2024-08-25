@@ -1,5 +1,6 @@
 package service;
 
+import exception.FailedToConvertException;
 import exception.ManagerSaveException;
 import model.*;
 import utils.Managers;
@@ -14,7 +15,6 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
 
     public FileBackedTasksManager(String fileName) {
         this.fileName = fileName;
-        loadFromFile(new File(fileName));
     }
 
     @Override
@@ -75,25 +75,26 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
             writer.write(historyToString(historyManager));
 
         } catch (IOException e) {
-            throw new ManagerSaveException("Failed to save");
+            throw new ManagerSaveException("Failed to save file");
         }
     }
 
-    private FileBackedTasksManager<T> loadFromFile(File file) {
+    private static FileBackedTasksManager<Task> loadFromFile(String file) {
+        FileBackedTasksManager<Task> fileBackedTasksManager = new FileBackedTasksManager<>(file);
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                fromString(line);
+                fileBackedTasksManager.fromString(line);
                 if (line.isEmpty()) {
                     line = reader.readLine();
-                    historyFromString(line);
+                    fileBackedTasksManager.historyFromString(line);
                     break;
                 }
             }
         } catch (IOException e) {
             throw new ManagerSaveException("Failed to load file");
         }
-        return this;
+        return fileBackedTasksManager;
     }
 
     private String historyToString(HistoryManager<Task> manager) {
@@ -106,9 +107,9 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
 
     public List<Integer> historyFromString(String value) {
         if (value == null) {
-            throw new ManagerSaveException("Failed to convert history from string");
+            throw new FailedToConvertException("Failed to convert history from string");
         }
-        getAllTasks();
+
         String[] parts = value.split(",\\s*");
         for (String part : parts) {
             if (!part.isBlank()) {
@@ -131,39 +132,33 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         }
     }
 
-    private T fromString(String value) {
-        if (value == null) {
-            throw new ManagerSaveException("Failed to convert task from string");
-        }
-        if (value.isBlank()) {
-            return null;
-        }
+    private void fromString(String value) {
         String[] parts = value.split(",\\s*");
 
-        // TODO проверка через Enum ()
-        Type type = Type.valueOfType(parts[1]);
-        if (type == null) {
-            return null;
-        }
-        switch (type) {
-            case EPIC:
-                Epic epic = new Epic(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3], Status.valueOf(parts[4]));
-                return add((T) epic);
-            case SUBTASK:
-                Subtask subtask = new Subtask(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3],
-                        Status.valueOf(parts[4]),(Epic)getTaskById(Integer.parseInt(parts[5])));
-                historyManager.remove(subtask.getParent().getId());
-                return add((T) subtask);
-            case TASK:
-                Task task = new Task(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3], Status.valueOf(parts[4]));
-                return add((T) task);
-            default:
-                return null;
+        if (!value.isBlank() && Type.valueOfType(parts[1]) != null) {
+            switch (Type.valueOfType(parts[1])) {
+                case EPIC:
+                    Epic epic = new Epic(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3], Status.valueOf(parts[4]));
+                    add((T) epic);
+                    break;
+                case SUBTASK:
+                    Subtask subtask = new Subtask(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3],
+                            Status.valueOf(parts[4]), (Epic) getTaskById(Integer.parseInt(parts[5])));
+                    historyManager.remove(subtask.getParent().getId());
+                    add((T) subtask);
+                    break;
+                case TASK:
+                    Task task = new Task(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3], Status.valueOf(parts[4]));
+                    add((T) task);
+                    break;
+                default:
+                    throw new FailedToConvertException("Failed to convert task from string");
+            }
         }
     }
 
     public static void main(String[] args) {
-        FileBackedTasksManager<Task> fileBackedTasksManager = new FileBackedTasksManager<>("data.csv");
+        FileBackedTasksManager<Task> fileBackedTasksManager = loadFromFile("data.csv");
         HistoryManager<Task> historyManager1 = Managers.getDefaultHistory();
         System.out.println(fileBackedTasksManager.readFile());
         System.out.println(fileBackedTasksManager.getAllTasks());

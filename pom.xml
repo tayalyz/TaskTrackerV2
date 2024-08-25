@@ -23,13 +23,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>RELEASE</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
 </project>
