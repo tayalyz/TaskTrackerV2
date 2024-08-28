@@ -1,36 +1,19 @@
+import exception.ManagerSaveException;
 import exception.TaskNotFoundException;
-import model.Epic;
-import model.Status;
-import model.Subtask;
-import model.Task;
+import exception.WrongTimeIntervalException;
+import model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.TaskManager;
 import utils.Managers;
+import java.time.*;
+import java.util.*;
 
-import java.util.List;
-import java.util.Map;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 
 abstract class TaskManagerTest {
-     /*
-     add task subtask
-     status у эпика
-     status у эпика с сабтасками
-     getById по всем типам
-     getById exception
-     getAllTasks по всем типам
-     получить/удалить сабтаски у эпика
-     removeAllTasks по всем типам
-     removeById по всем типам
-     update по всем типам
-
-     add по всем типам
-     getHistory
-     remove по всем типам
-    * */
 
     protected TaskManager<Task> taskManager;
 
@@ -314,5 +297,169 @@ abstract class TaskManagerTest {
         taskManager.update(subtask);
 
         assertEquals("покупки", subtask.getTitle(), "название подзадачи не обновилось");
+    }
+
+    @Test
+    public void getPrioritizedTasks() {
+        Task task1 = new Task(1000, Type.TASK, "task1", "task1", Status.IN_PROGRESS, 10, LocalDateTime.of (2016, 1, 4, 16, 30));
+        taskManager.add(task1);
+
+        Epic epic = new Epic(2000, Type.EPIC, "1epic", "1epic", Status.IN_PROGRESS, 0, LocalDateTime.of (2016, 1, 4, 11, 30));
+        taskManager.add(epic);
+
+        epic.setStartTime(LocalDateTime.of ( 2016, 1, 4, 17, 0));
+        taskManager.update(epic);
+
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        taskManager.add(subtask);
+
+        subtask.setStartTime(LocalDateTime.of ( 2018, 1, 4, 16, 30));
+        taskManager.update(subtask);
+
+        Task task2 = new Task("покупки в магазине", "нужно сходить до 15:00");
+        taskManager.add(task2);
+
+        final Set<Task> tasks = taskManager.getPrioritizedTasks();
+        assertThat(tasks).containsExactly(taskManager.getTaskById(task1.getId()),
+                taskManager.getTaskById(subtask.getId()),
+                taskManager.getTaskById(epic.getId()),
+                taskManager.getTaskById(task2.getId()));
+    }
+
+    @Test()
+    public void checkValidTimeInterval() {
+        Task task1 = new Task("task1", "task1", LocalDateTime.of(2016, 1, 4, 16, 30));
+        task1.setDuration(60);
+        taskManager.add(task1);
+
+        Task task2 = new Task("222", "222", LocalDateTime.of(2016, 1, 4, 16, 31));
+        assertThrows(WrongTimeIntervalException.class, () -> taskManager.add(task2));
+
+        Epic epic = new Epic("1epic", "1epic");
+        epic.setStartTime(LocalDateTime.of(2016, 1, 4, 17, 31));
+        assertDoesNotThrow(() -> taskManager.add(epic));
+
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        taskManager.add(subtask1);
+        subtask1.setStartTime(LocalDateTime.of(2016, 1, 4, 17, 31));
+        subtask1.setDuration(120);
+        assertDoesNotThrow(() -> taskManager.update(subtask1));
+
+        Subtask subtask2 = new Subtask("sub2", "sub2", epic);
+        taskManager.add(subtask2);
+        subtask2.setStartTime(LocalDateTime.of(2016, 1, 4, 18, 50));
+        assertThrows(WrongTimeIntervalException.class, () -> taskManager.update(subtask2));
+
+        // duration эпика 2 часа
+        Task task3 = new Task("task3", "task3", LocalDateTime.of(2016, 1, 4, 20, 0));
+        task1.setDuration(60);
+        assertDoesNotThrow(() -> taskManager.add(task3));
+
+        subtask2.setStartTime(LocalDateTime.of(2016, 1, 4, 20, 1));
+        assertDoesNotThrow(() -> taskManager.update(subtask2));
+    }
+
+    @Test
+    public void checkEpicValidTimeInterval() {
+        Epic epic = new Epic("1epic", "1epic");
+        taskManager.add(epic);
+
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        taskManager.add(subtask1);
+        subtask1.setStartTime(LocalDateTime.of (2016, 1, 4, 17, 30));
+        subtask1.setDuration(30);
+        taskManager.update(subtask1);
+
+        Subtask subtask2 = new Subtask("sub1", "sub1", epic);
+        taskManager.add(subtask2);
+        subtask2.setStartTime(LocalDateTime.of (2016, 1, 4, 19, 0));
+        subtask2.setDuration(30);
+        taskManager.update(subtask2);
+
+        assertEquals(LocalDateTime.of (2016, 1, 4, 19, 30), epic.getEndTime());
+    }
+
+    // todo EPIC SUBTASK (интервал и новые поля)
+    @Test()
+    public void checkValidTimeIntervalAddTaskFailure() {
+        Task task1 = new Task("task1", "task1", LocalDateTime.of (2016, 1, 4, 16, 30));
+        taskManager.add(task1);
+
+        Task task2 = new Task("222", "222", LocalDateTime.of (2016, 1, 4, 16, 30));
+        assertThrows(WrongTimeIntervalException.class, () -> taskManager.add(task2));
+    }
+
+    @Test()
+    public void checkValidTimeIntervalUpdateTaskFailure() {
+        Task task1 = new Task("task1", "task1", LocalDateTime.of (2016, 1, 4, 16, 30));
+        taskManager.add(task1);
+
+        Task task2 = new Task("222", "222", LocalDateTime.of (2016, 1, 4, 17, 30));
+        taskManager.add(task2);
+        task2.setStartTime(LocalDateTime.of (2016, 1, 4, 16, 30));
+
+        assertThrows(WrongTimeIntervalException.class, () -> taskManager.update(task2));
+    }
+
+    @Test
+    public void checkEpicStartTime() {
+        Epic epic = new Epic("1epic", "1epic");
+        taskManager.add(epic);
+
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        taskManager.add(subtask1);
+
+        Subtask subtask2 = new Subtask("sub2", "sub2", epic);
+        taskManager.add(subtask2);
+
+        subtask1.setStartTime(LocalDateTime.of (2016, 1, 4, 14, 30));
+        subtask1.setDuration(30);
+        taskManager.update(subtask1);
+
+        assertEquals(LocalDateTime.of (2016, 1, 4, 14, 30), epic.getStartTime());
+
+        subtask2.setStartTime(LocalDateTime.of (2016, 1, 4, 12, 30));
+        subtask2.setDuration(30);
+        taskManager.update(subtask2);
+
+        assertEquals(LocalDateTime.of (2016, 1, 4, 12, 30), epic.getStartTime());
+    }
+
+    @Test
+    public void checkEpicEndTimeAndDuration() {
+        Epic epic = new Epic("1epic", "1epic");
+        epic.setDuration(60);
+        taskManager.add(epic);
+        assertEquals(60, epic.getDuration());   // todo должно ли duration затираться?
+
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        taskManager.add(subtask1);
+        subtask1.setStartTime(LocalDateTime.of (2016, 1, 4, 17, 30));
+        subtask1.setDuration(30);
+
+        Subtask subtask2 = new Subtask("sub2", "sub2", epic);
+        taskManager.add(subtask2);
+        subtask2.setStartTime(LocalDateTime.of (2016, 1, 4, 18, 30));
+        subtask2.setDuration(15);
+
+        taskManager.update(subtask1);
+        taskManager.update(subtask2);
+
+        assertEquals(30, subtask1.getDuration());
+        assertEquals(45, epic.getDuration());    // todo ?
+
+        assertEquals(LocalDateTime.of (2016, 1, 4, 18, 45), epic.getEndTime());
+    }
+
+    @Test
+    public void checkTaskStartTime() {
+        Task task1 = new Task("task1", "task1", LocalDateTime.of (2016, 1, 4, 16, 30));
+        taskManager.add(task1);
+
+        Task task2 = new Task("222", "222", LocalDateTime.of (2016, 1, 4, 17, 30));
+        taskManager.add(task2);
+        task2.setStartTime(LocalDateTime.of (2016, 1, 4, 16, 30));
+
+        assertThrows(WrongTimeIntervalException.class, () -> taskManager.update(task2));
     }
 }

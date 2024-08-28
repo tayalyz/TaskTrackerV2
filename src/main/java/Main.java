@@ -1,11 +1,10 @@
-import model.Epic;
-import model.Status;
-import model.Subtask;
-import model.Task;
+import model.*;
 import service.FileBackedTasksManager;
 import service.HistoryManager;
 import service.TaskManager;
 import utils.Managers;
+
+import java.time.*;
 
 
 public class Main {
@@ -13,15 +12,15 @@ public class Main {
         FileBackedTasksManager<Task> taskManager = new FileBackedTasksManager<>("data.csv");
         HistoryManager<Task> historyManager = Managers.getDefaultHistory();
 
-
-        Task task1 = new Task("111", "111");
-        Task task2 = new Task("222", "222");
+        //Task task11 = new Task(100, Type.TASK, "111", "111", Status.NEW, 10, LocalDateTime.of (2016, 1, 4, 16, 30));
+        Task task1 = new Task("111", "111", LocalDateTime.of (2016, 1, 4, 16, 30));
+        Task task2 = new Task("222", "222", LocalDateTime.of (2016, 1, 4, 16, 31));
         Task task3 = new Task("234", "updated");
         Task task4 = new Task("234", "updated");
 
         Epic epic1 = new Epic("1epic", "1epic");
         Epic epic2 = new Epic("2epic", "2epic");
-
+        Task tasksd = new Task(1, Type.TASK, "1epic", "1epic", Status.IN_PROGRESS, 0, null);
 
         Subtask subtask1 = new Subtask("1sub", "1sub", epic1);
         Subtask subtask2 = new Subtask("2sub", "2sub", epic1);
@@ -29,7 +28,18 @@ public class Main {
 
         create(taskManager, task1, task2, epic1, epic2, subtask1, subtask2, subtask3);
 
+        //task1.setDuration(10000);
+        task2.setDuration(60);
+        subtask2.setDuration(0);
         taskManager.add(task3);
+
+        task3.setStartTime(LocalDateTime.of ( 2018, 1, 4, 17, 0));
+        subtask2.setStartTime(LocalDateTime.of ( 2015, 1, 4, 17, 31));
+        subtask1.setStartTime(LocalDateTime.of ( 2015, 1, 4, 16, 31));
+
+        taskManager.update(task3);
+        taskManager.update(subtask2);
+
         taskManager.add(task4);
         System.out.println(taskManager.getAllTasks());
 
@@ -51,7 +61,10 @@ public class Main {
         taskManager.update(subtask1);
 
         System.out.println("Updated task: " + task1 + "\nUpdated epic: " + epic1);
-        System.out.println(taskManager.getAllTasks());
+        System.out.println("\nAllTasks: " + taskManager.getAllTasks());
+        System.out.println("\nPrioritizedTasks: "+ taskManager.getPrioritizedTasks());
+        System.out.println(epic1.getEndTime());
+
         System.out.println(taskManager.readFile());
 
 //        delete(taskManager);
@@ -82,7 +95,12 @@ public class Main {
 
         manager.add(epic2);
         manager.add(subtask3);
-
+        System.out.println();
+        System.out.println();
+        System.out.println("/////////////////");
+        System.out.println();
+        //task1.setDuration(10000);
+       // System.out.println(task1.getEndTime());
         System.out.println("Created tasks: " + manager.getAllTasks());
     }
 

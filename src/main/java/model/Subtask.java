@@ -1,5 +1,7 @@
 package model;
 
+import java.time.LocalDateTime;
+
 public class Subtask extends Task {
     private final Epic parent;
 
@@ -9,8 +11,8 @@ public class Subtask extends Task {
         this.type = Type.SUBTASK;
     }
 
-    public Subtask(int id, Type type, String title, String description, Status status, Epic parent) {
-        super(id, type, title, description, status);
+    public Subtask(Integer id, Type type, String title, String description, Status status, int duration, LocalDateTime startTime, Epic parent) {
+        super(id, type, title, description, status, duration, startTime);
         this.parent = parent;
     }
 
@@ -26,6 +28,8 @@ public class Subtask extends Task {
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", duration=" + duration +
+                ", startTime=" + startTime +
                 ", parent=" + getParent().title +
                 '}';
     }
