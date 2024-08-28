@@ -1,14 +1,13 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static model.Status.*;
 
 public class Epic extends Task {
     private Map<Integer, Subtask> subtasks;
+    private LocalDateTime endTime;
 
     public Epic(String title, String description) {
         super(title, description);
@@ -16,8 +15,8 @@ public class Epic extends Task {
         this.type = Type.EPIC;
     }
 
-    public Epic(int id, Type type, String title, String description, Status status) {
-        super(id, type, title, description, status);
+    public Epic(Integer id, Type type, String title, String description, Status status, int duration, LocalDateTime startTime) {
+        super(id, type, title, description, status, duration, startTime);
         this.subtasks = new HashMap<>();
     }
 
@@ -34,7 +33,6 @@ public class Epic extends Task {
         for (Map.Entry<Integer, Subtask> set : subtasks.entrySet()) {
             list.add(set.getKey());
         }
-        // todo list задач с id
         return list;
     }
 
@@ -47,7 +45,7 @@ public class Epic extends Task {
     }
 
     public void updateStatus() {
-        Status newStatus = Status.NEW;
+        Status newStatus = NEW;
 
         boolean isNew = false;
         boolean isDone = false;
@@ -76,6 +74,37 @@ public class Epic extends Task {
         }
     }
 
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
+
+    @Override
+    public LocalDateTime getEndTime() {
+        return startTime != null && !subtasks.isEmpty() ? subtasks.values().stream()
+                .map(Subtask::getEndTime)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null) : startTime != null ? startTime.plusMinutes(duration) : null;
+    }
+
+    public void updateTime() {
+        this.startTime = subtasks.values().stream()
+                .map(Subtask::getStartTime)
+                .filter(Objects::nonNull)
+                .min(Comparator.naturalOrder())
+                .orElse(null);
+
+        this.endTime = startTime != null ? subtasks.values().stream()
+                .map(Subtask::getEndTime)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(startTime.plusMinutes(duration)) : null;
+
+        this.duration = subtasks.values().stream()
+                .mapToInt(Subtask::getDuration)
+                .sum();
+    }
+
     @Override
     public String toString() {
         return "Epic{" +
@@ -84,6 +113,8 @@ public class Epic extends Task {
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", status=" + status +
+                ", duration=" + duration +
+                ", startTime=" + startTime +
                 ", subtasks=" + subtasks +
                 '}';
     }

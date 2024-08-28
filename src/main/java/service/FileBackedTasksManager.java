@@ -8,6 +8,7 @@ import utils.Managers;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<T> {
@@ -50,12 +51,6 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         return newTask;
     }
 
-    // Создайте enum с типами задач.
-    //Напишите метод сохранения задачи в строку String toString(Task task) или переопределите базовый.
-    //Напишите метод создания задачи из строки Task fromString(String value).
-    //Напишите статические методы static String historyToString(HistoryManager manager)
-    // и static List<Integer> historyFromString(String value) для сохранения и восстановления менеджера истории из CSV.
-
     public String readFile() {
         try {
             return Files.readString(Path.of(fileName));
@@ -66,13 +61,14 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
 
     private void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
-            writer.write("id, " + "type, " + "title, "+ "description, " + "status, " + "parentId" + "\n");
+            writer.write("id, " + "type, " + "title, "+ "description, " + "status, " + "duration, " +
+                    "startTime, " + "parentId" + "\n");
 
             for (T task : getAllTasks()) {
                 writer.write(toString(task));
             }
             writer.write("\n");
-            writer.write(historyToString(historyManager));
+            writer.write(historyToString());
 
         } catch (IOException e) {
             throw new ManagerSaveException("Failed to save file");
@@ -97,7 +93,7 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         return fileBackedTasksManager;
     }
 
-    private String historyToString(HistoryManager<Task> manager) {
+    private String historyToString() {
         List<String> history = new ArrayList<>();
         for (Task task : historyManager.getHistory()) {
             history.add(String.valueOf(task.getId()));
@@ -105,30 +101,34 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         return String.join(", ", history);
     }
 
-    public List<Integer> historyFromString(String value) {
+    private void historyFromString(String value) {
         if (value == null) {
             throw new FailedToConvertException("Failed to convert history from string");
         }
 
-        String[] parts = value.split(",\\s*");
-        for (String part : parts) {
+        // TODO преобразовать в int сразу
+        String[] ids = value.split(",\\s*");
+        for (String part : ids) {
             if (!part.isBlank()) {
-                getTaskById(Integer.parseInt(part));
+                super.getTaskById(Integer.parseInt(part));
             }
         }
-        return null;
     }
 
     private String toString(T task) {
         if (task instanceof Epic) {
             return task.getId() + ", " + task.getType() + ", " + task.getTitle()+ ", " + task.getDescription()
-                    + ", " + task.getStatus() + "\n";
+                    + ", " + task.getStatus() + ", " + task.getDuration()
+                    + ", " + (task.getStartTime() != null ? task.getStartTime() : "0") + "\n";
         } else if (task instanceof Subtask) {
             return task.getId() + ", " + task.getType() + ", " + task.getTitle()+ ", " + task.getDescription()
-                    + ", " + task.getStatus() + ", " + ((Subtask) task).getParent().getId() + "\n";
+                    + ", " + task.getStatus() + ", " + task.getDuration()
+                    + ", " + (task.getStartTime() != null ? task.getStartTime() + ", " : "0, ")
+                    + ((Subtask) task).getParent().getId() + "\n";
         } else {
             return task.getId() + ", " + task.getType() + ", " + task.getTitle()+ ", " + task.getDescription()
-                    + ", " + task.getStatus() + "\n";
+                    + ", " + task.getStatus()  + ", " + task.getDuration()
+                    + ", " + (task.getStartTime() != null ? task.getStartTime() : "0") + "\n";
         }
     }
 
@@ -138,17 +138,26 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         if (!value.isBlank() && Type.valueOfType(parts[1]) != null) {
             switch (Type.valueOfType(parts[1])) {
                 case EPIC:
-                    Epic epic = new Epic(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3], Status.valueOf(parts[4]));
+                    Epic epic = new Epic(Integer.parseInt(parts[0]),
+                            Type.valueOf(parts[1]), parts[2], parts[3],
+                            Status.valueOf(parts[4]), Integer.parseInt(parts[5]),
+                            !parts[6].equals("0") ? LocalDateTime.parse(parts[6]) : null);
                     add((T) epic);
                     break;
                 case SUBTASK:
-                    Subtask subtask = new Subtask(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3],
-                            Status.valueOf(parts[4]), (Epic) getTaskById(Integer.parseInt(parts[5])));
+                    Subtask subtask = new Subtask(Integer.parseInt(parts[0]),
+                            Type.valueOf(parts[1]), parts[2], parts[3],
+                            Status.valueOf(parts[4]), Integer.parseInt(parts[5]),
+                            !parts[6].equals("0") ? LocalDateTime.parse(parts[6]) : null,
+                            (Epic) getTaskById(Integer.parseInt(parts[7])));
                     historyManager.remove(subtask.getParent().getId());
                     add((T) subtask);
                     break;
                 case TASK:
-                    Task task = new Task(Integer.parseInt(parts[0]), Type.valueOf(parts[1]), parts[2], parts[3], Status.valueOf(parts[4]));
+                    Task task = new Task(Integer.parseInt(parts[0]),
+                            Type.valueOf(parts[1]), parts[2], parts[3],
+                            Status.valueOf(parts[4]), Integer.parseInt(parts[5]),
+                            !parts[6].equals("0") ? LocalDateTime.parse(parts[6]) : null);
                     add((T) task);
                     break;
                 default:

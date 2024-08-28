@@ -2,8 +2,7 @@ package service;
 
 import model.Task;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public interface TaskManager<T extends Task> {
     T add(T task);
@@ -12,4 +11,5 @@ public interface TaskManager<T extends Task> {
     T getTaskById(int id);
     Optional<T> update(T task);
     List<T> getAllTasks();
+    Set<T> getPrioritizedTasks();
 }
