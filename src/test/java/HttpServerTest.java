@@ -371,6 +371,128 @@ public class HttpServerTest {
     }
 
     @Test
+    public void updateTask() {
+        Task task = new Task("t1", "d1", LocalDateTime.now().plusMinutes(10));
+        server.getTaskManager().add(task);
+        Task updatedTask = new Task("updated", "updated", LocalDateTime.now().plusMinutes(10));
+        updatedTask.setId(task.getId());
+
+        URI url = URI.create(taskUrl);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(updatedTask)))
+                .build();
+
+        HttpResponse<String> response = getResponse(request);
+
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
+        assertEquals(String.format("Задача с id %d успешно обновлена", task.getId()), response.body(), "Задача не была обновлена");
+    }
+
+    @Test
+    public void updateInvalidTask() {
+        Task task = new Task("t1", "d1", LocalDateTime.now().plusMinutes(10));
+        server.getTaskManager().add(task);
+        Task updatedTask = new Task(null, "updated", LocalDateTime.now().plusMinutes(10));
+        updatedTask.setId(task.getId());
+
+        URI url = URI.create(taskUrl);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(updatedTask)))
+                .build();
+
+        HttpResponse<String> response = getResponse(request);
+
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.statusCode());
+        assertEquals("Невалидная задача", response.body(), "Невалидная задача была обновлена");
+    }
+
+    @Test
+    public void updateSubtask() {
+        Epic epic = new Epic("ep1", "e1");
+        Subtask subtask = new Subtask("sub1", "sub1", epic.getId());
+        server.getTaskManager().add(epic);
+        server.getTaskManager().add(subtask);
+
+        Subtask updatedSubtask = new Subtask("updated", "updated", epic.getId());
+        updatedSubtask.setId(subtask.getId());
+
+        URI url = URI.create(subtaskUrl);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(updatedSubtask)))
+                .build();
+
+        HttpResponse<String> response = getResponse(request);
+
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
+        assertEquals(String.format("Подзадача с id %d успешно обновлена", subtask.getId()), response.body(), "Подзадача не была обновлена");
+    }
+
+    @Test
+    public void updateInvalidSubtask() {
+        Epic epic = new Epic(null, "e1");
+        Subtask subtask = new Subtask("sub1", "sub1", epic.getId());
+        server.getTaskManager().add(epic);
+        server.getTaskManager().add(subtask);
+
+        Subtask updatedSubtask = new Subtask("updated", null, epic.getId());
+        updatedSubtask.setId(subtask.getId());
+
+        URI url = URI.create(subtaskUrl);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(updatedSubtask)))
+                .build();
+
+        HttpResponse<String> response = getResponse(request);
+
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.statusCode());
+        assertEquals("Невалидная подзадача", response.body(), "Невалидная подзадача была обновлена");
+    }
+
+    @Test
+    public void updateEpic() {
+        Epic epic = new Epic("e1", "e1");
+        server.getTaskManager().add(epic);
+
+        Epic updatedEpic = new Epic("updated", "e1");
+        updatedEpic.setId(epic.getId());
+
+        URI url = URI.create(epicUrl);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(updatedEpic)))
+                .build();
+
+        HttpResponse<String> response = getResponse(request);
+
+        assertEquals(HttpURLConnection.HTTP_OK, response.statusCode());
+        assertEquals(String.format("Эпик с id %d успешно обновлен", epic.getId()), response.body(), "Эпик не был обновлен");
+    }
+
+    @Test
+    public void updateInvalidEpic() {
+        Epic epic = new Epic("e1", "e1");
+        server.getTaskManager().add(epic);
+
+        Epic updatedEpic = new Epic("updated", null);
+        updatedEpic.setId(epic.getId());
+
+        URI url = URI.create(epicUrl);
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .POST(HttpRequest.BodyPublishers.ofString(gson.toJson(updatedEpic)))
+                .build();
+
+        HttpResponse<String> response = getResponse(request);
+
+        assertEquals(HttpURLConnection.HTTP_BAD_REQUEST, response.statusCode());
+        assertEquals("Невалидный эпик", response.body(), "Невалидный эпик был обновлен");
+    }
+
+    @Test
     public void addTask() {
         Task task = new Task("t1", "d1", LocalDateTime.now().plusMinutes(10));
 
