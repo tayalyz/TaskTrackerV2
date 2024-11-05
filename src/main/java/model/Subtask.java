@@ -3,21 +3,21 @@ package model;
 import java.time.LocalDateTime;
 
 public class Subtask extends Task {
-    private final Epic parent;
+    private final int parentId;
 
-    public Subtask(String title, String description, Epic parent) {
+    public Subtask(String title, String description, int parentId) {
         super(title, description);
-        this.parent = parent;
+        this.parentId = parentId;
         this.type = Type.SUBTASK;
     }
 
-    public Subtask(Integer id, Type type, String title, String description, Status status, int duration, LocalDateTime startTime, Epic parent) {
+    public Subtask(Integer id, Type type, String title, String description, Status status, int duration, LocalDateTime startTime, int parentId) {
         super(id, type, title, description, status, duration, startTime);
-        this.parent = parent;
+        this.parentId = parentId;
     }
 
-    public Epic getParent() {
-        return parent;
+    public int getParentId() {
+        return parentId;
     }
 
     @Override
@@ -30,7 +30,7 @@ public class Subtask extends Task {
                 ", status=" + status +
                 ", duration=" + duration +
                 ", startTime=" + startTime +
-                ", parent=" + getParent().title +
+                ", parent=" + getParentId() +
                 '}';
     }
 }

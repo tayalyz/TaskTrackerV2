@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<T> {
-    private String fileName;
+    private final String fileName;
 
     public FileBackedTasksManager(String fileName) {
         this.fileName = fileName;
@@ -59,7 +59,7 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         }
     }
 
-    private void save() {
+    protected void save() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
             writer.write("id, " + "type, " + "title, " + "description, " + "status, " + "duration, " +
                     "startTime, " + "parentId" + "\n");
@@ -75,7 +75,7 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
         }
     }
 
-    private static FileBackedTasksManager<Task> loadFromFile(String file) {
+    public static FileBackedTasksManager<Task> loadFromFile(String file) {
         FileBackedTasksManager<Task> fileBackedTasksManager = new FileBackedTasksManager<>(file);
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
@@ -107,7 +107,7 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
 
         Arrays.stream(value.split(",\\s*"))
                 .mapToInt(Integer::parseInt)
-                .forEach(this::getTaskById);   // todo super?
+                .forEach(this::getTaskById);
     }
 
     private String toString(T task) {
@@ -119,7 +119,7 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
             return task.getId() + ", " + task.getType() + ", " + task.getTitle() + ", " + task.getDescription()
                     + ", " + task.getStatus() + ", " + task.getDuration()
                     + ", " + (task.getStartTime() != null ? task.getStartTime() + ", " : "0, ")
-                    + ((Subtask) task).getParent().getId() + "\n";
+                    + ((Subtask) task).getParentId() + "\n";
         } else {
             return task.getId() + ", " + task.getType() + ", " + task.getTitle() + ", " + task.getDescription()
                     + ", " + task.getStatus() + ", " + task.getDuration()
@@ -144,8 +144,8 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
                             Type.valueOf(parts[1]), parts[2], parts[3],
                             Status.valueOf(parts[4]), Integer.parseInt(parts[5]),
                             !parts[6].equals("0") ? LocalDateTime.parse(parts[6]) : null,
-                            (Epic) getTaskById(Integer.parseInt(parts[7])));
-                    historyManager.remove(subtask.getParent().getId());
+                            getTaskById(Integer.parseInt(parts[7])).getId());
+                    historyManager.remove(subtask.getParentId());
                     add((T) subtask);
                     break;
                 case TASK:
@@ -163,17 +163,18 @@ public class FileBackedTasksManager<T extends Task> extends InMemoryTaskManager<
 
     public static void main(String[] args) {
         FileBackedTasksManager<Task> fileBackedTasksManager = loadFromFile("data.csv");
-        HistoryManager<Task> historyManager1 = Managers.getDefaultHistory();
+        HistoryManager<Task> historyManager = Managers.getDefaultHistory();
         System.out.println(fileBackedTasksManager.readFile());
         System.out.println(fileBackedTasksManager.getAllTasks());
+
         Task task = fileBackedTasksManager.getTaskById(2);
 
-        System.out.println("history:" + historyManager1.getHistory());
+        System.out.println("history:" + historyManager.getHistory());
         task.setTitle("aaaaa");
         fileBackedTasksManager.update(task);
         fileBackedTasksManager.getTaskById(5);
         fileBackedTasksManager.getTaskById(6);
-        System.out.println("history:" + historyManager1.getHistory());
+        System.out.println("history:" + historyManager.getHistory());
         System.out.println(fileBackedTasksManager.getAllTasks());
         System.out.println(fileBackedTasksManager.readFile());
     }

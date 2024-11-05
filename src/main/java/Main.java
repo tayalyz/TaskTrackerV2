@@ -1,14 +1,19 @@
 import model.*;
+import server.KVServer;
 import service.FileBackedTasksManager;
 import service.HistoryManager;
 import service.TaskManager;
 import utils.Managers;
 
+import java.io.IOException;
 import java.time.*;
 
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        new KVServer().start();
+
+
         FileBackedTasksManager<Task> taskManager = new FileBackedTasksManager<>("data.csv");
         HistoryManager<Task> historyManager = Managers.getDefaultHistory();
 
@@ -22,9 +27,9 @@ public class Main {
         Epic epic2 = new Epic("2epic", "2epic");
         Task tasksd = new Task(1, Type.TASK, "1epic", "1epic", Status.IN_PROGRESS, 0, null);
 
-        Subtask subtask1 = new Subtask("1sub", "1sub", epic1);
-        Subtask subtask2 = new Subtask("2sub", "2sub", epic1);
-        Subtask subtask3 = new Subtask("3sub", "3sub", epic2);
+        Subtask subtask1 = new Subtask("1sub", "1sub", epic1.getId());
+        Subtask subtask2 = new Subtask("2sub", "2sub", epic1.getId());
+        Subtask subtask3 = new Subtask("3sub", "3sub", epic2.getId());
 
         create(taskManager, task1, task2, epic1, epic2, subtask1, subtask2, subtask3);
 

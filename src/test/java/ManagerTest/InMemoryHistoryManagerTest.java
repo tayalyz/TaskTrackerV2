@@ -1,3 +1,5 @@
+package ManagerTest;
+
 import org.junit.jupiter.api.BeforeEach;
 import service.InMemoryHistoryManager;
 import service.InMemoryTaskManager;

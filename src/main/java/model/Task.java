@@ -2,6 +2,7 @@ package model;
 
 import utils.Identifier;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class Task {
     protected Integer id;
@@ -107,6 +108,10 @@ public class Task {
 
     public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
+    }
+
+    public boolean validRequiredFields() {
+        return Objects.nonNull(title) && Objects.nonNull(description);
     }
 
     @Override

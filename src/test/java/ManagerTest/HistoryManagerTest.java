@@ -1,3 +1,5 @@
+package ManagerTest;
+
 import model.Epic;
 import model.Subtask;
 import model.Task;
@@ -26,7 +28,7 @@ public abstract class HistoryManagerTest {
     public void testGetHistory() {
         Task task1 = new Task("title4", "desc4");
         Epic epic = new Epic("title4", "desc4");
-        Subtask subtask = new Subtask("title6", "desc6", epic);
+        Subtask subtask = new Subtask("title6", "desc6", epic.getId());
         Task task3 = new Task("title5", "desc5");
 
         taskManager.add(task1);
@@ -62,7 +64,7 @@ public abstract class HistoryManagerTest {
     @Test
     public void removeEpicFromHistory() {
         Epic epic = new Epic("", "");
-        Subtask subtask = new Subtask("", "", epic);
+        Subtask subtask = new Subtask("", "", epic.getId());
 
         taskManager.add(epic);
         taskManager.add(subtask);
@@ -82,7 +84,7 @@ public abstract class HistoryManagerTest {
     @Test
     public void removeSubtaskFromHistory() {
         Epic epic = new Epic("", "");
-        Subtask subtask = new Subtask("", "", epic);
+        Subtask subtask = new Subtask("", "", epic.getId());
 
         taskManager.add(epic);
         taskManager.add(subtask);
@@ -114,7 +116,7 @@ public abstract class HistoryManagerTest {
     @Test
     public void addEpicToHistory() {
         Epic epic = new Epic("", "");
-        Subtask subtask = new Subtask("", "", epic);
+        Subtask subtask = new Subtask("", "", epic.getId());
 
         taskManager.add(epic);
         taskManager.add(subtask);
@@ -131,7 +133,7 @@ public abstract class HistoryManagerTest {
     @Test
     public void addSubtaskToHistory() {
         Epic epic = new Epic("", "");
-        Subtask subtask = new Subtask("", "", epic);
+        Subtask subtask = new Subtask("", "", epic.getId());
 
         taskManager.add(epic);
         taskManager.add(subtask);

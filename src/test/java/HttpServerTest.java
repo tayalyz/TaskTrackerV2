@@ -371,7 +371,7 @@ public class HttpServerTest {
     }
 
     @Test
-    public void updateTask() {
+    public void addAndUpdateTask() {
         Task task = new Task("t1", "d1", LocalDateTime.now().plusMinutes(10));
         server.getTaskManager().add(task);
         Task updatedTask = new Task("updated", "updated", LocalDateTime.now().plusMinutes(10));
@@ -390,7 +390,7 @@ public class HttpServerTest {
     }
 
     @Test
-    public void updateInvalidTask() {
+    public void addAndUpdateInvalidTask() {
         Task task = new Task("t1", "d1", LocalDateTime.now().plusMinutes(10));
         server.getTaskManager().add(task);
         Task updatedTask = new Task(null, "updated", LocalDateTime.now().plusMinutes(10));
@@ -409,7 +409,7 @@ public class HttpServerTest {
     }
 
     @Test
-    public void updateSubtask() {
+    public void addAndUpdateSubtask() {
         Epic epic = new Epic("ep1", "e1");
         Subtask subtask = new Subtask("sub1", "sub1", epic.getId());
         server.getTaskManager().add(epic);
@@ -431,7 +431,7 @@ public class HttpServerTest {
     }
 
     @Test
-    public void updateInvalidSubtask() {
+    public void addAndUpdateInvalidSubtask() {
         Epic epic = new Epic(null, "e1");
         Subtask subtask = new Subtask("sub1", "sub1", epic.getId());
         server.getTaskManager().add(epic);
@@ -453,7 +453,7 @@ public class HttpServerTest {
     }
 
     @Test
-    public void updateEpic() {
+    public void addAndUpdateEpic() {
         Epic epic = new Epic("e1", "e1");
         server.getTaskManager().add(epic);
 
@@ -473,7 +473,7 @@ public class HttpServerTest {
     }
 
     @Test
-    public void updateInvalidEpic() {
+    public void addAndUpdateInvalidEpic() {
         Epic epic = new Epic("e1", "e1");
         server.getTaskManager().add(epic);
 

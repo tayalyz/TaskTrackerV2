@@ -1,5 +1,5 @@
 package service;
-import exception.TaskNotFoundException;
+
 import exception.WrongTimeIntervalException;
 import model.Epic;
 import model.Subtask;
@@ -7,12 +7,12 @@ import model.Task;
 import utils.Managers;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
-    private Map<Integer, T> tasks;
+    private final Map<Integer, T> tasks;
     protected final HistoryManager<Task> historyManager;
     protected final Set<T> prioritizedTasks;
-
 
     public InMemoryTaskManager() {
         this.tasks = new HashMap<>();
@@ -24,16 +24,20 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
 
     @Override
     public T getTaskById(int id) {
-        T task = Optional.ofNullable(tasks.get(id))
-                .orElseThrow(() -> new TaskNotFoundException("Task not found"));
-        historyManager.add(task);
-        return task;
+        if (tasks.get(id) == null) {
+            System.err.println("Task not found");
+        } else {
+            T task = tasks.get(id);
+            historyManager.add(task);
+            return task;
+        }
+        return null;
     }
 
     @Override
     public T add(T task) {
         if (task instanceof Subtask) {
-            Epic epic = ((Subtask) task).getParent();
+            Epic epic = (Epic) tasks.get(((Subtask) task).getParentId());
             epic.addSubtask((Subtask) task);
             updateEpicData(epic);
         }
@@ -57,7 +61,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
     @Override
     public void removeById(int id) {
         if (tasks.containsKey(id)) {
-            T task = getTaskById(id);
+            T task = tasks.get(id);
 
             if (task instanceof Epic && !((Epic) task).getSubtasks().isEmpty()) {
                 List<Integer> subtasksIds = ((Epic) task).getSubtasksIds();
@@ -65,7 +69,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
                     removeById(subtaskId);
                 }
             } else if (task instanceof Subtask) {
-                Epic epic = ((Subtask) task).getParent();
+                Epic epic = (Epic) tasks.get(((Subtask) task).getParentId());
                 epic.removeSubtaskById(task.getId());
                 updateEpicData(epic);
             }
@@ -82,9 +86,8 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
     public Optional<T> update(T task) {
         if (tasks.containsKey(task.getId())) {
             if (task instanceof Subtask) {
-                updateEpicData(((Subtask) task).getParent());
+                updateEpicData((Epic) tasks.get(((Subtask) task).getParentId()));
             }
-
             checkTaskFreeInterval(task);
 
             tasks.put(task.getId(), task);
@@ -112,6 +115,13 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
         return prioritizedTasks;
     }
 
+    @Override
+    public List<Integer> getHistory() {
+        return historyManager.getHistory().stream()
+                .map(Task::getId)
+                .collect(Collectors.toList());
+    }
+
     private void checkTaskFreeInterval(T task) {
         if (task.getStartTime() == null || (task.getStartTime() == null && task.getDuration() == 0)) {
             return;
@@ -127,7 +137,7 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
         for (Task savedTask : prioritizedTasks) {
             if (!task.equals(savedTask)) {
                 if (task instanceof Subtask) {
-                    if (!savedTask.equals(((Subtask) task).getParent())) {
+                    if (!savedTask.equals(tasks.get(((Subtask) task).getParentId()))) {
                         isValidTime(task, savedTask);
                     }
                 } else if (task instanceof Epic) {
@@ -139,20 +149,6 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
                 }
             }
         }
-//        if (task.getStartTime() == null || task.getDuration() == 0) {
-//            return;
-//        }
-//        for (Task savedTask : tasks.values()) {
-//
-//            boolean startTimeBeforeSavedTask = savedTask.getStartTime().isBefore(task.getStartTime());
-//            boolean endTimeAfterSavedTask = savedTask.getEndTime().isAfter(task.getStartTime());
-//            boolean startTimeBeforeEndTimeSavedTask = savedTask.getStartTime().isBefore(task.getEndTime());
-//            boolean endTimeAfterEndTimeSavedTask = savedTask.getEndTime().isAfter(task.getEndTime());
-//
-//            if (!startTimeBeforeSavedTask || !endTimeAfterSavedTask || !startTimeBeforeEndTimeSavedTask || !endTimeAfterEndTimeSavedTask) {
-//                throw new ManagerSaveException("Time interval is wrong");
-//            }
-//        }
     }
 
     private void isValidTime(T task, Task savedTask) {
@@ -171,4 +167,5 @@ public class InMemoryTaskManager<T extends Task> implements TaskManager<T> {
         epic.updateStatus();
         epic.updateTime();
     }
+
 }
