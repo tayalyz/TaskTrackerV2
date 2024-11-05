@@ -12,4 +12,5 @@ public interface TaskManager<T extends Task> {
     Optional<T> update(T task);
     List<T> getAllTasks();
     Set<T> getPrioritizedTasks();
+    List<Integer> getHistory();
 }

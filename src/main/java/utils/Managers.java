@@ -1,24 +1,21 @@
 package utils;
 
 import model.Task;
-import service.HistoryManager;
-import service.InMemoryHistoryManager;
-import service.InMemoryTaskManager;
-import service.TaskManager;
+import server.KVServer;
+import service.*;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public class Managers {
     private static TaskManager<Task> taskManager;
     private static HistoryManager<Task> historyManager;
+    private static KVServer kvServer;
 
     private Managers() {}
 
     public static TaskManager<Task> getDefault() {
-        if (Objects.isNull(taskManager)) {
-            taskManager = new InMemoryTaskManager<>();
-        }
-        return taskManager;
+        return Objects.requireNonNullElseGet(taskManager, () -> taskManager = new HttpTaskManager<>("localhost"));
     }
 
     public static HistoryManager<Task> getDefaultHistory() {
@@ -26,5 +23,16 @@ public class Managers {
             historyManager = new InMemoryHistoryManager<>();
         }
         return historyManager;
+    }
+
+    public static KVServer getKVServer() {
+        if (Objects.isNull(kvServer)) {
+            try {
+                kvServer = new KVServer();
+            } catch (IOException e) {
+                throw new RuntimeException();
+            }
+        }
+        return kvServer;
     }
 }

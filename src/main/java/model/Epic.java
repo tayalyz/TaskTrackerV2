@@ -40,8 +40,8 @@ public class Epic extends Task {
         subtasks.remove(id);
     }
 
-    public Subtask addSubtask(Subtask subtask) {
-        return subtasks.put(subtask.getId(), subtask);
+    public void addSubtask(Subtask subtask) {
+        subtasks.put(subtask.getId(), subtask);
     }
 
     public void updateStatus() {

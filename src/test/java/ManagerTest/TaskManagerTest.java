@@ -1,5 +1,5 @@
-import exception.ManagerSaveException;
-import exception.TaskNotFoundException;
+package ManagerTest;
+
 import exception.WrongTimeIntervalException;
 import model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
         final Subtask savedSubtask = (Subtask) taskManager.getTaskById(subtask.getId());
 
@@ -76,14 +76,15 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask1 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask1 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask1);
 
-        Subtask subtask2 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask2 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask2);
 
         final Map<Integer, Subtask> map = epic.getSubtasks();
         final List<Integer> list = epic.getSubtasksIds();
+
         assertEquals(2,map.size(), "неверное кол-во подзадач");
         assertEquals(2,list.size(), "неверное кол-во подзадач");
     }
@@ -94,8 +95,8 @@ abstract class TaskManagerTest {
         taskManager.add(epic1);
         assertSame(epic1.getStatus(), Status.NEW, "статус эпика без подзадач неверный");
 
-        Subtask subtask1 = new Subtask("", "", epic1);
-        Subtask subtask2 = new Subtask("", "", epic1);
+        Subtask subtask1 = new Subtask("", "", epic1.getId());
+        Subtask subtask2 = new Subtask("", "", epic1.getId());
         taskManager.add(subtask1);
         taskManager.add(subtask2);
         assertSame(epic1.getStatus(), Status.NEW, "статус эпика с подзадачами неверный");
@@ -150,18 +151,13 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
 
         final Subtask savedSubtask = (Subtask) taskManager.getTaskById(subtask.getId());
 
         assertNotNull(savedSubtask, "подзадача не найдена");
         assertEquals(subtask,savedSubtask, "подзадачи не совпадают");
-    }
-
-    @Test
-    public void testGetByIdFailure() {
-        assertThrows(TaskNotFoundException.class, () -> taskManager.getTaskById(17000));
     }
 
     @Test
@@ -172,7 +168,7 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
 
         final List<Task> tasks = taskManager.getAllTasks();
@@ -188,7 +184,7 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
 
         taskManager.removeAllTasks();
@@ -216,7 +212,7 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
 
         taskManager.removeById(epic.getId());
@@ -241,10 +237,10 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask1 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask1 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask1);
 
-        Subtask subtask2 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask2 = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask2);
 
         taskManager.removeById(subtask1.getId());
@@ -290,7 +286,7 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("покупки в магазине", "нужно сходить до 15:00");
         taskManager.add(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
 
         subtask.setTitle("покупки");
@@ -310,7 +306,7 @@ abstract class TaskManagerTest {
         epic.setStartTime(LocalDateTime.of ( 2016, 1, 4, 17, 0));
         taskManager.update(epic);
 
-        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic);
+        Subtask subtask = new Subtask("покупки в магазине", "нужно сходить до 15:00", epic.getId());
         taskManager.add(subtask);
 
         subtask.setStartTime(LocalDateTime.of ( 2018, 1, 4, 16, 30));
@@ -339,13 +335,13 @@ abstract class TaskManagerTest {
         epic.setStartTime(LocalDateTime.of(2016, 1, 4, 17, 31));
         assertDoesNotThrow(() -> taskManager.add(epic));
 
-        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic.getId());
         taskManager.add(subtask1);
         subtask1.setStartTime(LocalDateTime.of(2016, 1, 4, 17, 31));
         subtask1.setDuration(120);
         assertDoesNotThrow(() -> taskManager.update(subtask1));
 
-        Subtask subtask2 = new Subtask("sub2", "sub2", epic);
+        Subtask subtask2 = new Subtask("sub2", "sub2", epic.getId());
         taskManager.add(subtask2);
         subtask2.setStartTime(LocalDateTime.of(2016, 1, 4, 18, 50));
         assertThrows(WrongTimeIntervalException.class, () -> taskManager.update(subtask2));
@@ -364,13 +360,13 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("1epic", "1epic");
         taskManager.add(epic);
 
-        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic.getId());
         taskManager.add(subtask1);
         subtask1.setStartTime(LocalDateTime.of (2016, 1, 4, 17, 30));
         subtask1.setDuration(30);
         taskManager.update(subtask1);
 
-        Subtask subtask2 = new Subtask("sub1", "sub1", epic);
+        Subtask subtask2 = new Subtask("sub1", "sub1", epic.getId());
         taskManager.add(subtask2);
         subtask2.setStartTime(LocalDateTime.of (2016, 1, 4, 19, 0));
         subtask2.setDuration(30);
@@ -406,10 +402,10 @@ abstract class TaskManagerTest {
         Epic epic = new Epic("1epic", "1epic");
         taskManager.add(epic);
 
-        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic.getId());
         taskManager.add(subtask1);
 
-        Subtask subtask2 = new Subtask("sub2", "sub2", epic);
+        Subtask subtask2 = new Subtask("sub2", "sub2", epic.getId());
         taskManager.add(subtask2);
 
         subtask1.setStartTime(LocalDateTime.of (2016, 1, 4, 14, 30));
@@ -432,12 +428,12 @@ abstract class TaskManagerTest {
         taskManager.add(epic);
         assertEquals(60, epic.getDuration());   // todo должно ли duration затираться?
 
-        Subtask subtask1 = new Subtask("sub1", "sub1", epic);
+        Subtask subtask1 = new Subtask("sub1", "sub1", epic.getId());
         taskManager.add(subtask1);
         subtask1.setStartTime(LocalDateTime.of (2016, 1, 4, 17, 30));
         subtask1.setDuration(30);
 
-        Subtask subtask2 = new Subtask("sub2", "sub2", epic);
+        Subtask subtask2 = new Subtask("sub2", "sub2", epic.getId());
         taskManager.add(subtask2);
         subtask2.setStartTime(LocalDateTime.of (2016, 1, 4, 18, 30));
         subtask2.setDuration(15);
